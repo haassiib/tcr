@@ -1,0 +1,301 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRESQL_URL")
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum LoginStatus {
+  success
+  failed
+}
+
+enum MessageStatus {
+  new
+  read
+  replied
+  closed
+}
+
+enum NotificationType {
+  booking
+  payment
+  system
+  promotional
+  alert
+}
+
+model User {
+  id               Int                      @id @default(autoincrement())
+  uuid             String                   @unique @db.Uuid
+  email            String                   @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
+  phone            String?
+  avatarUrl        String? // Changed to String? for optionality
+  dateOfBirth      DateTime?                @db.Date
+  gender           Gender?
+  emailVerifiedAt  DateTime?
+  isActive         Boolean                  @default(false)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  // Relations
+  userRoles        UserRole[]
+  loginHistory     LoginHistory[]
+  emailVerificationTokens EmailVerificationToken[]
+  notifications    Notification[] // Relation to Notification model
+  vendors          Vendor[] // Relation to Vendor model
+
+  @@map("users")
+  @@index([email])
+  @@index([uuid])
+}
+
+model Role {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
+  description      String?
+  createdAt        DateTime           @default(now())
+
+  // Relations
+  userRoles        UserRole[]
+  rolePermissions  RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
+  description      String?
+  createdAt        DateTime           @default(now())
+
+  // Relations
+  rolePermissions  RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id               Int                @id @default(autoincrement())
+  userId           Int
+  roleId           Int
+  createdAt        DateTime           @default(now())
+
+  // Relations
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role             Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id               Int                @id @default(autoincrement())
+  roleId           Int
+  permissionId     Int
+  createdAt        DateTime           @default(now())
+
+  // Relations
+  role             Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission       Permission         @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Menu {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  icon         String?
+  href         String?
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  // Self-relation for nested menus
+  parentId     Int?
+  parent       Menu?    @relation("MenuHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children     Menu[]   @relation("MenuHierarchy")
+
+  @@map("menus")
+  @@index([parentId])
+}
+
+model LoginHistory {
+  id               Int                @id @default(autoincrement())
+  userId           Int
+  ipAddress        String?
+  userAgent        String?
+  loginAt          DateTime           @default(now())
+  status           LoginStatus        @default(success)
+  failureReason    String?
+
+  // Relations
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("login_history")
+  @@index([userId, loginAt])
+}
+
+model PasswordResetToken {
+  id               Int                @id @default(autoincrement())
+  email            String
+  token            String
+  expiresAt        DateTime
+  createdAt        DateTime           @default(now())
+  usedAt           DateTime?
+
+  @@map("password_reset_tokens")
+  @@index([token])
+  @@index([email])
+}
+
+model EmailVerificationToken {
+  id               Int                @id @default(autoincrement())
+  userId           Int
+  token            String
+  expiresAt        DateTime
+  createdAt        DateTime           @default(now())
+  verifiedAt       DateTime?
+
+  // Relations
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_tokens")
+  @@index([token])
+}
+
+model Notification {
+  id               Int                @id @default(autoincrement())
+  uuid             String             @unique @db.Uuid
+  userId           Int?
+  type             NotificationType
+  title            String
+  message          String?
+  data             Json?
+  isRead           Boolean            @default(false)
+  sentViaEmail     Boolean            @default(false)
+  sentViaSms       Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  readAt           DateTime?
+
+  // Relations
+  user             User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+  @@index([userId, isRead])
+  @@index([type])
+}
+
+// Brand model: A user can have multiple brands, and a brand can belong to multiple users.
+// A brand can also have multiple vendors.
+model Brand {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
+  description      String?
+  createdAt        DateTime           @default(now())
+  isActive         Boolean            @default(true)
+  // Relations to Vendor model
+  vendors          Vendor[]
+
+  @@map("brands")
+  @@index([name])
+}
+
+
+// Vendor model: Basic information about the vendor.
+model Vendor {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @db.Uuid
+  brandId     Int
+  userId      Int
+  name        String
+  description String?
+  isActive         Boolean             @default(true)
+
+  createdAt   DateTime @default(now())
+
+  // Relations to other models
+  brand Brand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stats VendorStat[]
+  monthlyBalances VendorMonthlyBalance[]
+  depositorRetentions DepositorRetention[]
+
+  @@unique([brandId, name])
+
+  @@map("vendors")
+  @@index([brandId])
+  @@index([userId])
+  @@index([uuid])
+}
+
+// VendorMonthlyBalance model: Stores the closing balance for a vendor at the end of each month.
+model VendorMonthlyBalance {
+  id             Int      @id @default(autoincrement())
+  vendorId       Int
+  month          Int // 1 for January, 12 for December
+  year           Int
+  closingBalance Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, month, year])
+  @@map("vendor_monthly_balances")
+}
+
+// VendorStat model: Statistical data for a vendor.
+model VendorStat {
+  id               Int     @id @default(autoincrement())
+  vendorId         Int
+  statDate         DateTime @db.Date
+  registration     Int     @default(0)
+  firstTimeDeposit Int     @default(0)
+  adExpense        Decimal @db.Decimal(10, 2)
+  adsCommission    Decimal @db.Decimal(10, 2)
+  dailyBudget      Decimal @db.Decimal(10, 2)
+  topUpAmount      Decimal @db.Decimal(10, 2)
+  adsViews         Int     @default(0)
+  adsClicks        Int     @default(0)
+  adsChargeback    Decimal @db.Decimal(10, 2)
+  deposit          Decimal @db.Decimal(10, 2) @default(0)
+  withdraw         Decimal @db.Decimal(10, 2) @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_stats")
+  @@unique([vendorId, statDate])
+  @@index([vendorId])
+}
+
+model DepositorRetention {
+  id           Int      @id @default(autoincrement())
+  vendorId     Int
+  dayName      String
+  dateOfReturn DateTime
+  percentage   Decimal  @db.Decimal(10, 2) @default(0)
+  createdAt    DateTime @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, dayName, dateOfReturn])
+  @@map("depositor_retentions")
+  @@index([vendorId])
+}
