@@ -100,10 +100,13 @@ export default function VendorDepositForm({
     setIsSubmitting(true);
     const result = await updateVendorDeposit({
       id: stat?.id,
-      ...parsedData.data,
+      ...parsedData.data, // Spread other data
+      // Convert vendorId to number as expected by the action
+      vendorId: parseInt(parsedData.data.vendorId, 10),
+
     });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Save failed', { description: result.error });
     } else {
       toast.success(`Funding entry ${isEditMode ? 'updated' : 'created'} successfully!`);
@@ -149,11 +152,23 @@ export default function VendorDepositForm({
           </div>
           <div className="mb-4">
             <label htmlFor="brandId" className="block text-sm font-medium text-gray-700">Brand</label>
-            <AutocompleteDropdown options={brands.map(b => ({ value: b.id.toString(), label: b.name }))} value={selectedBrandId} onChange={handleBrandChange} placeholder="Select a Brand" disabled={isEditMode} />
+            <AutocompleteDropdown
+              options={brands.map(b => ({ value: b.id.toString(), label: b.name }))}
+              value={selectedBrandId} onChange={handleBrandChange} placeholder="Select a Brand"
+              searchPlaceholder="Search brands..."
+              emptyText="No brands found."
+              disabled={isEditMode} />
           </div>
           <div className="mb-4">
             <label htmlFor="vendorId" className="block text-sm font-medium text-gray-700">Vendor</label>
-            <AutocompleteDropdown options={filteredVendors.map(v => ({ value: v.id.toString(), label: v.name }))} value={formData.vendorId} onChange={handleVendorChange} placeholder="Select a Vendor" disabled={isEditMode || !selectedBrandId} />
+            <AutocompleteDropdown
+              options={filteredVendors.map(v => ({ value: v.id.toString(), label: v.name }))}
+              value={formData.vendorId}
+              onChange={handleVendorChange}
+              placeholder="Select a Vendor"
+              searchPlaceholder="Search vendors..."
+              emptyText="No vendors found."
+              disabled={isEditMode || !selectedBrandId} />
           </div>
           <div className="mb-4">
             <label htmlFor="deposit" className="block text-sm font-medium text-gray-700">Deposit</label>

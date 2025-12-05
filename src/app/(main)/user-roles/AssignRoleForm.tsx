@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { assignRolesToUser } from './actions';
-import { User, Role } from '@prisma/client';
+import { User, Role, UserRole } from '@prisma/client';
 import { AutocompleteDropdown } from '@/components/ui/AutocompleteDropdown';
 import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown';
 import { toast } from 'sonner';
@@ -55,7 +55,7 @@ export default function AssignRoleForm({ users, roles, assignment, isOpen, onClo
         roleIds: roleIds.map(id => parseInt(id)),
         routePath,
       });
-      if (result.error) {
+      if ('error' in result && result.error) {
         toast.error('Operation Failed', { description: result.error });
       } else {
         toast.success('Roles assigned successfully!');
@@ -93,11 +93,11 @@ export default function AssignRoleForm({ users, roles, assignment, isOpen, onClo
         <form id="assign-role-form" onSubmit={handleSubmit} className="flex-grow flex flex-col pt-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">User</label>
-            <AutocompleteDropdown options={userOptions} value={userId} onChange={setUserId} placeholder="Select a user" searchPlaceholder="Search user..." emptyText="No user found." disabled={!!assignment} />
+            <AutocompleteDropdown options={userOptions} value={userId} onChange={setUserId} placeholder="Select a user" searchPlaceholder="Search user..." emptyText="No users found." disabled={!!assignment} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Roles</label>
-            <MultiSelectDropdown options={roleOptions} value={roleIds} onChange={setRoleIds} placeholder="Select roles" searchPlaceholder="Search roles..." />
+            <MultiSelectDropdown options={roleOptions} value={roleIds} onChange={setRoleIds} placeholder="Select roles" />
           </div>
         </form>
     </ResizableSidebar>

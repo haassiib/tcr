@@ -92,7 +92,7 @@ export default function VendorDepositsPage() {
     setActiveEditingRowId(null);
     const result = await updateVendorDeposit({ id: statId, ...changes });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Save failed', { description: result.error });
     } else {
       toast.success('Row saved successfully!');
@@ -114,7 +114,7 @@ export default function VendorDepositsPage() {
     if (updates.length === 0) return toast.info('No changes to save.');
 
     const result = await updateMultipleVendorDeposits(updates);
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Save failed', { description: result.error });
     } else {
       toast.success(`All ${updates.length} changes saved successfully!`);
@@ -149,6 +149,9 @@ export default function VendorDepositsPage() {
         let bValue: any = b[sortConfig.key as keyof VendorStat];
         if (sortConfig.key === 'brand') aValue = a.vendor.brand.name;
         if (sortConfig.key === 'vendor') aValue = a.vendor.name;
+
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -210,8 +213,18 @@ export default function VendorDepositsPage() {
         </div>
         <div className="flex flex-col md:items-end gap-4 w-full md:w-auto">
           <div className="flex flex-col md:flex-row md:justify-end gap-4 w-full">
-            <AutocompleteDropdown className="w-full sm:w-48" options={uniqueBrands.map(b => ({ value: b.id.toString(), label: b.name }))} value={selectedBrandId} onChange={setSelectedBrandId} placeholder="All Brands" />
-            <AutocompleteDropdown className="w-full sm:w-48" options={uniqueVendors.map(v => ({ value: v.id.toString(), label: v.name }))} value={selectedVendorId} onChange={setSelectedVendorId} placeholder="All Vendors" />
+            <AutocompleteDropdown className="w-full sm:w-48"
+              options={uniqueBrands.map(b => ({ value: b.id.toString(), label: b.name }))}
+              value={selectedBrandId} onChange={setSelectedBrandId} placeholder="All Brands"
+              searchPlaceholder="Search brands..."
+              emptyText="No brands found."
+            />
+            <AutocompleteDropdown className="w-full sm:w-48"
+              options={uniqueVendors.map(v => ({ value: v.id.toString(), label: v.name }))}
+              value={selectedVendorId} onChange={setSelectedVendorId} placeholder="All Vendors"
+              searchPlaceholder="Search vendors..."
+              emptyText="No vendors found."
+            />
             <div className="w-full sm:w-72"><DateRangePicker onDateRangeChange={setDateRange} initialRange={dateRange} /></div>
           </div>
         </div>

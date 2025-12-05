@@ -39,8 +39,15 @@ export async function createOrUpdateUser(data: {
   try {
     if (id) {
       // Prevent users from editing their own active status or roles
-      if (id === currentUser.id && (data.isActive !== currentUser.isActive || JSON.stringify(data.roleIds.sort()) !== JSON.stringify(currentUser.userRoles.map(ur => ur.roleId).sort()))) {
-        return { error: 'Users cannot change their own active status or roles.' };
+      if (id === currentUser.id) {
+        const userToUpdate = await prisma.user.findUnique({
+          where: { id },
+          include: { userRoles: true },
+        });
+
+        if (userToUpdate && (data.isActive !== userToUpdate.isActive || JSON.stringify(data.roleIds.sort()) !== JSON.stringify(userToUpdate.userRoles.map(ur => ur.roleId).sort()))) {
+          return { error: 'Users cannot change their own active status or roles.' };
+        }
       }
 
       // Update user
@@ -104,7 +111,7 @@ export async function createOrUpdateUser(data: {
   }
 
   revalidatePath('/users');
-  revalidateTag('current-user');
+  revalidateTag('current-user', 'layout');
   return { success: true };
 }
 

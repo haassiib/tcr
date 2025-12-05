@@ -72,6 +72,10 @@ export default function BrandsPage() {
       sortableBrands.sort((a, b) => {
         const aValue = a[sortConfig.key as keyof Brand];
         const bValue = b[sortConfig.key as keyof Brand];
+
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
+
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;

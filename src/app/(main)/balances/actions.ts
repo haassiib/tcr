@@ -19,6 +19,9 @@ export async function createOrUpdateBalance(
   },
 ): Promise<ActionResult> {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   const requiredPermission = data.id ? `${data.routePath}:update` : `${data.routePath}:create`;
   if (!permissions.has(requiredPermission)) {
@@ -88,7 +91,6 @@ export async function getBalancesPageData() {
   if (!user) {
     throw new Error('Unauthorized');
   }
-
   const permissions = await getUserPermissions(user.id);
   const canViewAll = permissions.has('balances:view:all');
   const canViewOwn = permissions.has('balances:view');

@@ -46,6 +46,9 @@ export async function getScoreReport(params: {
   routePath: string;
 }) {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   const canViewAll = permissions.has(`${params.routePath}:view:all`);
   const canViewOwn = permissions.has(`${params.routePath}:view`);
@@ -98,7 +101,7 @@ export async function getScoreReport(params: {
     });
 
     const vendorIds = [...new Set(vendorStatsData.map(s => s.vendorId))];
-    const rorData = await prisma.DepositorRetention.findMany({
+    const rorData = await prisma.depositorRetention.findMany({
       where: {
         vendorId: { in: vendorIds },
         dateOfReturn: { gte: startDate, lte: endDate },

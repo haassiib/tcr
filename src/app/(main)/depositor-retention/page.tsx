@@ -27,7 +27,7 @@ interface GroupedRetentionEntry {
 
 export default function DepositorRetentionPage() {
   const [retentionEntries, setRetentionEntries] = useState<RetentionEntryWithRelations[]>([]);
-  const [vendors, setVendors] = useState<(Vendor & { brandId: number })[]>([]);
+  const [vendors, setVendors] = useState<Pick<Vendor, 'id' | 'name' | 'brandId'>[]>([]);
   const [brands, setBrands] = useState<Pick<Brand, 'id' | 'name'>[]>([]);
   const [userPermissions, setUserPermissions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -86,7 +86,7 @@ export default function DepositorRetentionPage() {
 
   const handleDeleteEntry = async (id: number) => {
     const result = await deleteDepositorRetention({ id, routePath });
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Deletion Failed', { description: result.error });
     } else {
       toast.success('Entry deleted successfully.');
@@ -119,7 +119,7 @@ export default function DepositorRetentionPage() {
           originalEntries: [],
         };
       }
-      acc[key].percentages[entry.dayName] = entry.percentage;
+      acc[key].percentages[entry.dayName] = (entry.percentage as any).toNumber();
       acc[key].originalEntries.push(entry);
       return acc;
     }, {} as Record<string, GroupedRetentionEntry>);
@@ -174,8 +174,17 @@ export default function DepositorRetentionPage() {
           {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={20} /></button>}
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="w-full sm:w-64"><AutocompleteDropdown options={brandOptions} value={brandId} onChange={setBrandId} placeholder="All Brands" /></div>
-          <div className="w-full sm:w-64"><AutocompleteDropdown options={vendorOptions} value={vendorId} onChange={setVendorId} placeholder="All Vendors" disabled={vendorOptions.length === 0} /></div>
+          <div className="w-full sm:w-64"><AutocompleteDropdown
+            options={brandOptions} value={brandId} onChange={setBrandId} placeholder="All Brands"
+            searchPlaceholder="Search brands..."
+            emptyText="No brands found."
+          /></div>
+          <div className="w-full sm:w-64"><AutocompleteDropdown
+            options={vendorOptions} value={vendorId} onChange={setVendorId} placeholder="All Vendors"
+            searchPlaceholder="Search vendors..."
+            emptyText="No vendors found."
+            disabled={vendorOptions.length === 0}
+          /></div>
         </div>
       </div>
 

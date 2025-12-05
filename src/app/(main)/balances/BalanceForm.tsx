@@ -116,7 +116,7 @@ export default function BalanceForm({ balance, vendors, brands, isOpen, onClose,
     };
 
     const result = await createOrUpdateBalance(serializedData);
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Operation Failed', { description: result.error });
     } else {
       const successMessage = balance ? 'Balance updated successfully.' : 'New balance entry created.';

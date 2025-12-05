@@ -58,7 +58,7 @@ export default function BrandForm({ brand, isOpen, onClose, canCreate, canUpdate
       routePath,
     });
 
-    if (result.error) {
+    if ('error' in result &&  result.error) {
       toast.error('Operation Failed', { description: result.error });
     } else {
       const successMessage = brand ? 'Brand updated successfully.' : 'New brand created.';

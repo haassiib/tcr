@@ -47,7 +47,19 @@ export async function updateVendorDeposit(data: {
        await prisma.vendorStat.upsert({
           where: { vendorId_statDate: { vendorId, statDate } },
           update: prismaData,
-          create: { vendorId, statDate, ...prismaData },
+          create: {
+            vendorId,
+            statDate,
+            deposit: prismaData.deposit ?? 0,
+            withdraw: prismaData.withdraw ?? 0,
+            registration: 0,
+            firstTimeDeposit: 0,
+            adExpense: 0,
+            adsChargeback: 0,
+            adsCommission: 0,
+            dailyBudget: 0,
+            topUpAmount: 0,
+          },
         });
     } else {
         return { error: 'Missing required data for creation.' };
@@ -213,6 +225,13 @@ export async function upsertVendorDepositsForMonth(data: {
             statDate: entry.date,
             deposit: entry.deposit ? new Decimal(entry.deposit) : 0,
             withdraw: entry.withdraw ? new Decimal(entry.withdraw) : 0,
+            registration: 0,
+            firstTimeDeposit: 0,
+            adExpense: 0,
+            adsChargeback: 0,
+            adsCommission: 0,
+            dailyBudget: 0,
+            topUpAmount: 0,
           },
         });
       }

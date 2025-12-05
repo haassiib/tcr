@@ -74,7 +74,7 @@ export default function UsersPage() {
 
   const handleToggleStatus = async (id: number) => {
     const result = await toggleUserStatus({ id, routePath });
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Operation Failed', { description: result.error });
     } else {
       toast.success('User status updated.');
@@ -107,6 +107,9 @@ export default function UsersPage() {
           aValue = a[sortConfig.key as keyof User];
           bValue = b[sortConfig.key as keyof User];
         }
+
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;

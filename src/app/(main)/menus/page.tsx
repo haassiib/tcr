@@ -78,6 +78,9 @@ export default function MenusPage() {
         const aValue = a[key as keyof MenuType];
         const bValue = b[key as keyof MenuType];
 
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
+
         if (aValue < bValue) return direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return direction === 'asc' ? 1 : -1;
         return 0;
@@ -105,6 +108,8 @@ export default function MenusPage() {
           aValue = a[sortConfig.key as keyof MenuType];
           bValue = b[sortConfig.key as keyof MenuType];
         }
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;

@@ -130,7 +130,7 @@ export default function VendorDepositEntryForm({
       entries: changedEntries,
     });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Save failed', { description: result.error });
     } else {
       toast.success('Deposit data saved successfully!');
@@ -184,14 +184,18 @@ export default function VendorDepositEntryForm({
           <AutocompleteDropdown
             options={brands.map(b => ({ value: b.id.toString(), label: b.name }))}
             value={selectedBrandId}
-            onChange={setSelectedBrandId}
+            onChange={value => { setSelectedBrandId(value); setSelectedVendorId(null); }}
             placeholder="Select Brand"
+            searchPlaceholder="Search brands..."
+            emptyText="No brands found."
           />
           <AutocompleteDropdown
             options={filteredVendors.map(v => ({ value: v.id.toString(), label: v.name }))}
             value={selectedVendorId}
             onChange={setSelectedVendorId}
             placeholder="Select Vendor"
+            searchPlaceholder="Search vendors..."
+            emptyText="No vendors found."
             disabled={!selectedBrandId}
           />
           <select value={selectedYear} onChange={e => setSelectedYear(parseInt(e.target.value))} className="h-[42px] pl-2 bg-white border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">

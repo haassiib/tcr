@@ -138,7 +138,7 @@ export default function VendorStatForm({ stat, vendors, isOpen, onClose, canCrea
         ...dataToUpdate,
       });
 
-      if (result.error) {
+      if ('error' in result && result.error) {
         toast.error('Update failed', { description: result.error });
       } else {
         toast.success('Stats updated successfully!');
@@ -151,7 +151,7 @@ export default function VendorStatForm({ stat, vendors, isOpen, onClose, canCrea
         vendorId: parseInt(vendorId, 10),
       });
 
-      if (result.error) {
+      if ('error' in result && result.error) {
         toast.error('Create failed', { description: result.error });
       } else {
         toast.success('Stat created successfully!');

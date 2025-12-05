@@ -18,7 +18,7 @@ type RorEntry = { dayName: string; percentage: string; originalPercentage: strin
 
 interface DepositorRetentionFormProps {
   entries: (DepositorRetention & { vendor?: { name: string } })[]; // Pass all entries for the selected date/vendor
-  vendors: (Vendor & { brandId: number })[];
+  vendors: Pick<Vendor, 'id' | 'name' | 'brandId'>[];
   brands: Pick<Brand, 'id' | 'name'>[];
   isOpen: boolean;
   onClose: () => void;
@@ -141,7 +141,7 @@ export default function DepositorRetentionForm({ entries, vendors, brands, isOpe
       routePath,
     });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Operation Failed', { description: result.error });
     } else {
       toast.success(entries.length > 0 ? 'ROR entries updated successfully.' : 'ROR entries created successfully.');
@@ -182,11 +182,25 @@ export default function DepositorRetentionForm({ entries, vendors, brands, isOpe
         <div className="flex-grow overflow-y-auto pr-4 pl-4 -mr-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300">
           <div className="mb-4">
             <label htmlFor="brandId" className="block text-sm font-medium text-gray-700">Brand</label>
-            <AutocompleteDropdown options={brandOptions} value={selectedBrandId} onChange={value => { setSelectedBrandId(value); setFormData(p => ({ ...p, vendorId: '' })); }} placeholder="Select a brand" disabled={isEditing} />
+            <AutocompleteDropdown
+              options={brandOptions}
+              value={selectedBrandId}
+              onChange={value => { setSelectedBrandId(value); setFormData(p => ({ ...p, vendorId: '' })); }}
+              placeholder="Select a brand"
+              searchPlaceholder="Search for a brand..."
+              emptyText="No brands found."
+              disabled={isEditing} />
           </div>
           <div className="mb-4">
             <label htmlFor="vendorId" className="block text-sm font-medium text-gray-700">Vendor</label>
-            <AutocompleteDropdown options={filteredVendorOptions} value={formData.vendorId} onChange={value => setFormData(p => ({ ...p, vendorId: value || '' }))} placeholder="Select an vendor" disabled={isEditing || !selectedBrandId} />
+            <AutocompleteDropdown
+              options={filteredVendorOptions}
+              value={formData.vendorId}
+              onChange={value => setFormData(p => ({ ...p, vendorId: value || '' }))}
+              placeholder="Select a vendor"
+              searchPlaceholder="Search for a vendor..."
+              emptyText="No vendors found."
+              disabled={isEditing || !selectedBrandId} />
             {errors.vendorId && <p className="mt-1 text-sm text-red-600">{errors.vendorId}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4 mb-4">

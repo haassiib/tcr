@@ -24,7 +24,7 @@ interface UserFormProps {
   routePath: string;
 }
 
-export default function UserForm({ user, roles, isOpen, onClose, canCreate, canUpdate }: UserFormProps) {
+export default function UserForm({ user, roles, isOpen, onClose, canCreate, canUpdate, routePath }: UserFormProps) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -108,10 +108,10 @@ export default function UserForm({ user, roles, isOpen, onClose, canCreate, canU
     setCropModalOpen(false);
     try {
       const croppedImageBlob = await getCroppedImg(imageSrcForCrop, croppedAreaPixels);
-      const formData = new FormData();
-      formData.append('file', croppedImageBlob, 'avatar.png');
-      formData.append('oldAvatarUrl', formData.avatarUrl);
-      const { url } = await uploadAvatar(formData);
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', croppedImageBlob, 'avatar.png');
+      uploadFormData.append('oldAvatarUrl', formData.avatarUrl);
+      const { url } = await uploadAvatar(uploadFormData);
       toast.success('Avatar uploaded successfully!');
       setFormData(prev => ({ ...prev, avatarUrl: url }));
     } catch (error) {
@@ -130,10 +130,10 @@ export default function UserForm({ user, roles, isOpen, onClose, canCreate, canU
       id: user?.id,
       ...formData,
       roleIds: selectedRoles,
-      routePath,
+      routePath: routePath,
     });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Operation Failed', { description: result.error });
     } else {
       const successMessage = user ? 'User updated successfully!' : 'User created successfully!';

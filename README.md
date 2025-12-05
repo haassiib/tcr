@@ -14,7 +14,7 @@ Authentication & User Management
  - Login history tracking
 
 Admin Dashboard
- - Centralized interface for managing users, content, bookings, and system settings
+ - Centralized interface for managing users, and system settings
  - Reporting and analytics
 
 Communication & Notifications
@@ -40,3 +40,29 @@ Frontend Architecture Requirements
  - Custom hooks for data fetching, form handling, and auth logic
  - Responsive UI built with Tailwind CSS 4
  - Protected routes based on user roles and authentication status
+
+Basic Structure:
+
+/
+├── public/
+│   └── # Static assets
+├── src/
+│   ├── app/
+│   │   ├── (api)/
+│   │   │   └── # Next.js API Routes (or tRPC)
+│   │   ├── (auth)/
+│   │   │   ├── login/
+│   │   │   └── register/
+│   │   ├── admin/
+│   │   │   └── # Admin dashboard routes
+│   │   ├── layout.js
+│   │   └── page.js
+│   ├── components/
+│   │   ├── ui/
+│   │   └── # Shared client/server components
+│   ├── hooks/
+│   │   └── # Custom hooks
+│   ├── lib/
+│   │   └── # Helper functions, utils
+│   └── middleware.js # For route protection
+└── # Config files (tailwind.config.js, etc.)

@@ -64,7 +64,7 @@ export default function PermissionForm({ permission, isOpen, onClose, canCreate,
         }));
 
       if (permissionsToCreate.length > 0) {
-        await createOrUpdatePermission({ ...permissionsToCreate, routePath });
+        await createOrUpdatePermission({ permissions: permissionsToCreate, routePath });
       }
     }
     onClose(); 

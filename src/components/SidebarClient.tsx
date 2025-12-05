@@ -126,7 +126,7 @@ export function SidebarClient({ user, menuItems }: SidebarClientProps) {
         <nav className={cn("mt-4 space-y-1 flex-1", isEffectivelyCollapsed ? "px-2" : "px-4")}>
           {hydratedMenuItems.map((item) => (
             <MenuItem 
-              key={item.id}
+              key={item.name}
               item={item}
               sidebarCollapsed={isEffectivelyCollapsed}
               isOpen={openMenus.has(item.name.toLowerCase())}

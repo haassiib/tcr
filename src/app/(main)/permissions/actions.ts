@@ -12,17 +12,21 @@ type PermissionData = {
   type?: string;
 };
 
+type BulkPermissionData = { permissions: Omit<PermissionData, 'id'>[], routePath: string };
+
 export async function createOrUpdatePermission(
-  data: (PermissionData | PermissionData[]) & { routePath: string }
+  data: (PermissionData & { routePath: string }) | BulkPermissionData
 ) {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
-  const { routePath, ...payload } = data;
 
-  if (Array.isArray(payload)) {
+  if ('permissions' in data) {
     // Bulk create
-    if (!permissions.has(`${routePath}:create`)) throw new Error('Unauthorized');
-    const createData = payload;
+    if (!permissions.has(`${data.routePath}:create`)) throw new Error('Unauthorized');
+    const createData = data.permissions;
     await prisma.permission.createMany({
       data: createData.map(({ name, description, type }) => ({
         name: type ? `${name}:${type}` : name,
@@ -32,8 +36,8 @@ export async function createOrUpdatePermission(
     });
   } else {
     // Single create or update
-    const { id, name, description } = payload;
-    const requiredPermission = id ? `${routePath}:update` : `${routePath}:create`;
+    const { id, name, description } = data;
+    const requiredPermission = id ? `${data.routePath}:update` : `${data.routePath}:create`;
     if (!permissions.has(requiredPermission)) throw new Error('Unauthorized');
 
     if (id) {
@@ -54,6 +58,9 @@ export async function createOrUpdatePermission(
 
 export async function deletePermission(data: { id: number; routePath: string }) {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   if (!permissions.has(`${data.routePath}:delete`)) throw new Error('Unauthorized');
 
@@ -65,6 +72,9 @@ export async function deletePermission(data: { id: number; routePath: string }) 
 
 export async function getPermissionsPageData() {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const userPermissions = await getUserPermissions(user.id);
 
   const permissions = await prisma.permission.findMany({

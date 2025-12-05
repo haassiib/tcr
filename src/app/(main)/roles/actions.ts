@@ -7,6 +7,9 @@ import { revalidatePath } from 'next/cache';
 
 export async function getRolesPageDataWithPermissions() {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
 
   const permissions = await getUserPermissions(user.id);
   if (!permissions.has('roles:view')) {
@@ -40,7 +43,9 @@ export async function createOrUpdateRole(data: {
   const { id, name, description, permissionIds, routePath } = data;
 
   const user = await getCurrentUser();
-
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   const requiredPermission = id ? `${routePath}:update` : `${routePath}:create`;
   if (!permissions.has(requiredPermission)) {
@@ -82,7 +87,9 @@ export async function createOrUpdateRole(data: {
 
 export async function deleteRole(data: { id: number; routePath: string }) {
   const user = await getCurrentUser();
-
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   if (!permissions.has(`${data.routePath}:delete`)) {
     throw new Error('Unauthorized');

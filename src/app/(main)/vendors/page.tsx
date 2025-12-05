@@ -91,6 +91,9 @@ export default function VendorsPage() {
           bValue = b[sortConfig.key as keyof Vendor];
         }
 
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
+
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;

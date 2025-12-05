@@ -34,7 +34,7 @@ type EditedStats = Record<number, Partial<EditableStatFields>>;
 
 export default function VendorStatsPage() {
   const [vendorStats, setVendorStats] = useState<VendorStatWithRelations[]>([]);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [vendors, setVendors] = useState<(Vendor & { brand: Brand })[]>([]);
   const [userPermissions, setUserPermissions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -105,7 +105,7 @@ export default function VendorStatsPage() {
 
   const handleDeleteStat = useCallback(async (statId: number) => {
     const result = await deleteVendorStat(statId);
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Delete failed', { description: result.error });
     } else {
       toast.success('Stat deleted successfully!');
@@ -138,7 +138,7 @@ export default function VendorStatsPage() {
 
     const result = await updateVendorStat({ id: statId, ...changes });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Save failed', { description: result.error });
     } else {
       toast.success('Row saved successfully!');
@@ -164,7 +164,7 @@ export default function VendorStatsPage() {
     }
 
     const result = await updateMultipleVendorStats(updates);
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Save failed', { description: result.error });
     } else {
       toast.success(`All ${updates.length} changes saved successfully!`);
@@ -215,6 +215,9 @@ export default function VendorStatsPage() {
         if (sortConfig.key === 'brand') bValue = b.vendor.brand.name;
         else if (sortConfig.key === 'vendor') bValue = b.vendor.name;
         else bValue = b[sortConfig.key as keyof VendorStat];
+
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;

@@ -61,7 +61,7 @@ export default function MenuForm({ menu, allMenus, isOpen, onClose, canCreate, c
       routePath,
     });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Operation Failed', { description: result.error });
     } else {
       const successMessage = menu ? 'Menu updated successfully.' : 'Menu created successfully.';

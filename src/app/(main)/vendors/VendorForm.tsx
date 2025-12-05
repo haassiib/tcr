@@ -57,7 +57,7 @@ export default function VendorForm({ vendor, brands, users, isOpen, onClose, can
       isActive: formData.isActive,
     });
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       toast.error('Operation Failed', { description: result.error });
     } else {
       const successMessage = vendor ? 'Vendor updated successfully.' : 'Vendor created successfully.';

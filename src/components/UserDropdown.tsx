@@ -19,10 +19,19 @@ interface UserDropdownProps {
   user: PrismaUser | null;
 }
 
+interface UserMenuItem {
+  icon: React.ElementType;
+  label: string;
+  href?: string;
+  destructive?: boolean;
+  onClick?: () => Promise<void>;
+  badge?: string | number;
+}
+
 export function UserDropdown({ user }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
+  
   const userName = user ? `${user.firstName} ${user.lastName}` : 'Guest';
   const userInitials = user ? `${user.firstName[0]}${user.lastName[0]}` : 'G';
 
@@ -40,7 +49,7 @@ export function UserDropdown({ user }: UserDropdownProps) {
     }
   }, [])
 
-  const menuItems = [
+  const menuItems: UserMenuItem[] = [
     {
       icon: User, // Corrected from User to UserIcon
       label: 'My Profile',

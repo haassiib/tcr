@@ -16,6 +16,9 @@ export async function createOrUpdateMultipleDepositorRetention(
   }
 ): Promise<ActionResult> {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   // For batch operations, we can check for both create and update permissions
   if (!permissions.has(`${data.routePath}:create`) || !permissions.has(`${data.routePath}:update`)) {
@@ -28,7 +31,7 @@ export async function createOrUpdateMultipleDepositorRetention(
     await prisma.$transaction(async (tx) => {
       for (const item of percentages) {
         // Use upsert to either create a new entry or update an existing one
-        await tx.DepositorRetention.upsert({
+        await tx.depositorRetention.upsert({
           where: {
             vendorId_dayName_dateOfReturn: {
               vendorId,
@@ -66,6 +69,9 @@ export async function createOrUpdateDepositorRetention(
   },
 ): Promise<ActionResult> {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   const requiredPermission = data.id ? `${data.routePath}:update` : `${data.routePath}:create`;
   if (!permissions.has(requiredPermission)) {
@@ -82,12 +88,12 @@ export async function createOrUpdateDepositorRetention(
 
   try {
     if (id) {
-      await prisma.DepositorRetention.update({
+      await prisma.depositorRetention.update({
         where: { id },
         data: retentionData,
       });
     } else {
-      await prisma.DepositorRetention.create({
+      await prisma.depositorRetention.create({
         data: retentionData,
       });
     }
@@ -105,13 +111,16 @@ export async function createOrUpdateDepositorRetention(
 
 export async function deleteDepositorRetention(data: { id: number; routePath: string }): Promise<ActionResult> {
   const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
   const permissions = await getUserPermissions(user.id);
   if (!permissions.has(`${data.routePath}:delete`)) {
     return { error: 'Unauthorized' };
   }
 
   try {
-    await prisma.DepositorRetention.delete({ where: { id: data.id } });
+    await prisma.depositorRetention.delete({ where: { id: data.id } });
   } catch (error) {
     console.error(error);
     return { error: 'An unexpected error occurred during deletion.' };
@@ -137,7 +146,7 @@ export async function getDepositorRetentionPageData() {
 
   const whereClause = canViewAll ? {} : { vendor: { userId: user.id } };
 
-  const retentionEntries = await prisma.DepositorRetention.findMany({
+  const retentionEntries = await prisma.depositorRetention.findMany({
     where: whereClause,
     include: {
       vendor: {

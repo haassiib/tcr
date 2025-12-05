@@ -143,11 +143,28 @@ export async function createVendorStat(data: {
     return { error: 'Unauthorized' };
   }
 
+  const toDecimal = (value: any): Decimal => {
+    if (value === undefined || value === null || value === '') return new Decimal(0);
+    if (value instanceof Decimal) return value;
+    return new Decimal(value);
+  };
+
   try {
     await prisma.vendorStat.create({
       data: {
-        ...data,
+        vendorId: data.vendorId,
         statDate: new Date(data.statDate),
+        registration: data.registration ?? 0,
+        firstTimeDeposit: data.firstTimeDeposit ?? 0,
+        adExpense: toDecimal(data.adExpense),
+        adsCommission: toDecimal(data.adsCommission),
+        dailyBudget: toDecimal(data.dailyBudget),
+        topUpAmount: toDecimal(data.topUpAmount),
+        adsViews: data.adsViews ?? 0,
+        adsClicks: data.adsClicks ?? 0,
+        adsChargeback: toDecimal(data.adsChargeback),
+        deposit: toDecimal(data.deposit),
+        withdraw: toDecimal(data.withdraw),
       },
     });
   } catch (error) {

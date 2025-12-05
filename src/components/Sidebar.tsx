@@ -50,7 +50,7 @@ function buildMenuTree(
         id: menu.id, 
         name: menu.name, 
         href: menu.href || undefined, 
-        icon: IconComponent.displayName || 'Circle', 
+        icon: menu.icon || 'Circle', 
         children,
       });
       return acc;

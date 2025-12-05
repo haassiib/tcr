@@ -12,6 +12,13 @@ import { toast } from 'sonner';
 
 type UserRoleWithRelations = UserRole & { user: Pick<User, 'firstName' | 'lastName'>; role: Pick<Role, 'name'> };
 
+interface GroupedUserRole {
+  userId: number;
+  userName: string;
+  roles: { id: number; name: string }[];
+  assignedAt: string;
+}
+
 export default function UserRolesPage() {
   const [userRoles, setUserRoles] = useState<UserRoleWithRelations[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -19,7 +26,7 @@ export default function UserRolesPage() {
   const [userPermissions, setUserPermissions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<UserRoleWithRelations | null>(null);
+  const [editingAssignment, setEditingAssignment] = useState<(UserRole & { allRoleIds: string[] }) | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
@@ -57,29 +64,42 @@ export default function UserRolesPage() {
     setSidebarOpen(true);
   };
 
-  const handleEditAssignment = (assignment: UserRoleWithRelations) => {
-    const userAssignments = userRoles.filter(ur => ur.userId === assignment.userId);
-    const userWithAllRoles = {
-      ...assignment,
-      allRoleIds: userAssignments.map(ur => ur.roleId.toString()),
-    };
-    setEditingAssignment(userWithAllRoles as any);
+  const handleEditAssignment = (assignment: GroupedUserRole) => {
+    setEditingAssignment({
+      userId: assignment.userId,
+      roleId: assignment.roles[0].id, // A placeholder roleId is needed for the type
+      id: 0, // A placeholder id
+      createdAt: new Date(assignment.assignedAt), // A placeholder date
+      allRoleIds: assignment.roles.map(r => r.id.toString()),
+    });
     setSidebarOpen(true);
   };
 
-  const filteredUserRoles = userRoles.filter(ur =>
-    `${ur.user.firstName} ${ur.user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ur.role.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const groupedUserRoles = useMemo(() => {
+    const grouped: Record<string, GroupedUserRole> = userRoles.reduce((acc, ur) => {
+      const userIdStr = String(ur.userId);
+      if (!acc[userIdStr]) {
+        acc[userIdStr] = {
+          userId: ur.userId,
+          userName: `${ur.user.firstName} ${ur.user.lastName}`,
+          roles: [],
+          assignedAt: ur.createdAt.toString(),
+        };
+      }
+      acc[userIdStr].roles.push({ id: ur.roleId, name: ur.role.name });
+      return acc;
+    }, {} as Record<string, GroupedUserRole>);
+    return Object.values(grouped);
+  }, [userRoles]);
+
+  const filteredUserRoles = groupedUserRoles.filter(group =>
+    group.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    group.roles.some(role => role.name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, itemsPerPage]);
-
-  const paginatedUserRoles = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredUserRoles.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredUserRoles, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredUserRoles.length / itemsPerPage);
 
@@ -88,6 +108,10 @@ export default function UserRolesPage() {
       setCurrentPage(page);
     }
   };
+  const paginatedUserRoles = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredUserRoles.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredUserRoles, currentPage, itemsPerPage]);
 
 
   return (
@@ -131,7 +155,7 @@ export default function UserRolesPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Roles</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned At</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
@@ -139,14 +163,18 @@ export default function UserRolesPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr><td colSpan={4} className="text-center py-4">Loading...</td></tr>
-            ) : paginatedUserRoles.map(ur => (
-              <tr key={ur.id}>
-                <td className="px-6 py-4 whitespace-nowrap font-medium">{ur.user.firstName} {ur.user.lastName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-600">{ur.role.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-600">{new Date(ur.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+            ) : paginatedUserRoles.map(group => (
+              <tr key={group.userId}>
+                <td className="px-6 py-4 whitespace-nowrap font-medium">{group.userName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                  {group.roles.map(role => (
+                    <span key={role.id} className="mr-2 mb-2 inline-block px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded-full">{role.name}</span>
+                  ))}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">{new Date(group.assignedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {canAssignRoles && (
-                    <button onClick={() => handleEditAssignment(ur)} className="p-2 text-gray-500 hover:text-indigo-600 rounded-full hover:bg-gray-100 transition-colors" title="Edit assignment">
+                    <button onClick={() => handleEditAssignment(group)} className="p-2 text-gray-500 hover:text-indigo-600 rounded-full hover:bg-gray-100 transition-colors" title="Edit assignment">
                       <Pencil size={18} />
                     </button>
                   )}

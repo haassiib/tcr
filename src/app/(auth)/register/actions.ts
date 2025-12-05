@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth/hashing';
 import { generateToken, generateUuid } from '@/lib/auth/tokens';
-import { sendVerificationEmail } from '@/lib/utils/email';
 import { FormState } from '@/types/auth';
 
 const registerSchema = z.object({
@@ -62,8 +61,6 @@ export async function registerUser(prevState: FormState, formData: FormData): Pr
       expiresAt: new Date(Date.now() + 3600000), // 1 hour
     },
   });
-
-  //await sendVerificationEmail({ email, token });
 
   return { success: true };
 }

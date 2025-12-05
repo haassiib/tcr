@@ -79,7 +79,6 @@ export async function getVendorSummaryReport(params: {
         deposit: Number(item.deposit),
         registration: item.registration,
         withdraw: Number(item.withdraw),
-        registration: item.registration,
         firstTimeDeposit: item.firstTimeDeposit,
         totalAdCost,
         revenue,

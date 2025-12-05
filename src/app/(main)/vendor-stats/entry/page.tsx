@@ -28,6 +28,8 @@ interface NewVendorStatRow {
   adsChargeback: string;
 }
 
+type SerializedBrand = Omit<Brand, 'createdAt'> & { createdAt: string };
+
 // Preprocess empty strings to undefined so that zod can apply defaults.
 const numberPreprocess = (val: unknown) => (val === '' || val === null ? undefined : Number(val));
 
@@ -68,7 +70,7 @@ export default function VendorStatEntryPage() {
   const [rows, setRows] = useState<NewVendorStatRow[]>([{ ...initialNewRow, tempId: Date.now() }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [vendors, setVendors] = useState<(Vendor & { brand: Brand })[]>([]);
-  const [allBrands, setAllBrands] = useState<Brand[]>([]);
+  const [allBrands, setAllBrands] = useState<SerializedBrand[]>([]);
   const [userPermissions, setUserPermissions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +79,7 @@ export default function VendorStatEntryPage() {
       try {
         const { vendors, brands, userPermissions } = await getVendorStatEntryPageData();
         setVendors(vendors as any);
-        setAllBrands(brands);
+        setAllBrands(brands as SerializedBrand[]);
         setUserPermissions(new Set(userPermissions));
       } catch (error) {
         if (error instanceof Error && error.message === 'Unauthorized') router.push('/unauthorized');
@@ -333,7 +335,7 @@ export default function VendorStatEntryPage() {
     toast.promise(promise, {
       loading: 'Saving...',
       success: (result) => {
-        if (result.error) {
+        if ('error' in result && result.error) {
           throw new Error(result.error);
         }
         setIsSubmitting(false);

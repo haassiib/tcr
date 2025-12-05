@@ -92,6 +92,9 @@ export default function BalancePage() {
           bValue = b[sortConfig.key as keyof VendorMonthlyBalance];
         }
 
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
+
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         
@@ -110,7 +113,7 @@ export default function BalancePage() {
       (searchQuery === '' ||
         balance.vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         balance.vendor.brand.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (!brandId || balance.vendor.brandId === parseInt(brandId, 10)) &&
+      (!brandId || balance.vendor.brand.id === parseInt(brandId, 10)) &&
       (!vendorId || balance.vendorId === parseInt(vendorId, 10))
     );
   }, [sortedBalances, searchQuery, brandId, vendorId]);
